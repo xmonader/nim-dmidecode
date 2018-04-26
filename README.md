@@ -4,7 +4,7 @@ dmidecode parser in nim
 
 ## Example
 
-```
+```nim
 let sample1 = """
 # dmidecode 3.1
 Getting SMBIOS data from sysfs.
