@@ -49,7 +49,6 @@ proc parseDMI* (source: string) : Table[string, Section]=
             if s != nil:
                 sects[s.title] = s
             continue
-
         if state == sectionName:
             s.title = l
             state = readKeyValue
