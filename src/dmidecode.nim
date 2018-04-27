@@ -49,24 +49,29 @@ proc parseDMI* (source: string) : Table[string, Section]=
             if s != nil:
                 sects[s.title] = s
             continue
-        if state == sectionName:
+        
+        if state == sectionName:  # current line is the title line
             s.title = l
-            state = readKeyValue
+            state = readKeyValue  # change state into reading key value pairs
         elif state == readKeyValue:
             let pair = l.split({':'})
             k = pair[0].strip()
             if len(pair) == 2:
                 v = pair[1].strip()
-            else:
+            else:                 # value can be empty
                 v = ""
             p = Property(val: v)
             p.items = newSeq[string]()
             p.val = v
+
+            # current line indentation is <  nextline indentation => change state to readList
             if i < len(lines) and (getIndentlevel(l) < getIndentlevel(lines[i+1])) :
                 state = readList
             else:
+                # add key/value pair directly
                 s.props[k] = p
         elif state == readList:
+            # keep adding the current line to current property items and if dedented => change state to readKeyValue
             p.add_item(l.strip())
             if getindentlevel(l) > getindentlevel(lines[i+1]):
                 state = readKeyValue 
