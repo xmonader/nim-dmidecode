@@ -265,22 +265,47 @@ proc parseDMI* (source: string) : Table[string, Section]=
         p: Property = nil
         s: Section = nil 
         k, v: string
+```
+Here we define the current state, code lines, initialize a table `sects` from `sectionName` to `Section Object` and variables p `current property`, s `current section`, k, v `current property key, value`
+
+```nim
     for i, l in pairs(lines):
+```
+Start looping on index, line using `pairs` 
+> pairs is kinda like enumerate in python
+
+```
         if l.startsWith("Handle"):
             s = new Section
             s.props = initTable[string, Property]()
             s.handleline = l
             state = sectionName
             continue 
+```
+If we encounter the string `Handle` 
+- create new section object and initialize it's props table
+- keep track of the handle line
+- switch state to reading sectionName
+- continue the loop to move to the title line
 
+```nim
         if l == "": # can be just new line before reading any sections. 
             if s != nil:
                 sects[s.title] = s
             continue
-        
+```
+if line is empty and we have a section object `not nil` we finish the section and continue 
+
+```nim
         if state == sectionName:  # current line is the title line
             s.title = l
             state = readKeyValue  # change state into reading key value pairs
+```
+If state is sectionName:
+- this line is a title line 
+- change state for the upcoming to readKeyValue
+
+```
         elif state == readKeyValue:
             let pair = l.split({':'})
             k = pair[0].strip()
@@ -291,20 +316,38 @@ proc parseDMI* (source: string) : Table[string, Section]=
             p = Property(val: v)
             p.items = newSeq[string]()
             p.val = v
+```
+If state is readKeyValue
+- split the line on colon `:` to get key, value pair and set v to "" if not present
+- make current Property `p` and initialize its related fields `items`, `val`
 
+```nim
             # current line indentation is <  nextline indentation => change state to readList
             if i < len(lines) and (getIndentlevel(l) < getIndentlevel(lines[i+1])) :
                 state = readList
+```
+If the next line indentation is greater this means we're should be reading list of items regarding the current property `p`
+
+```nim
             else:
                 # add key/value pair directly
                 s.props[k] = p
+```
+If not finish the property
+
+
+```nim
         elif state == readList:
             # keep adding the current line to current property items and if dedented => change state to readKeyValue
             p.add_item(l.strip())
             if getindentlevel(l) > getindentlevel(lines[i+1]):
                 state = readKeyValue 
                 s.props[k] = p
-
+```
+if state is `readList`
+- keep adding items to current property `p`
+- if the indentation level decreased change state to `readKeyValue` and finish property
+```
     return sects
 
 ```
